@@ -33,7 +33,7 @@ function MeldView({ meld }: { meld: Meld }): ReactNode {
           key={`${tile}-${index}`}
           tile={meld.type === "ankan" && (index === 0 || index === 3) ? HIDDEN_TILE : tile}
           size="xs"
-          sideways={meld.calledTile === tile && index === 0}
+          sideways={meld.calledTile !== null && meld.calledTile === tile}
         />
       ))}
     </div>
@@ -277,11 +277,9 @@ function Table({ controller, onRestart }: { controller: Controller; onRestart: (
             {view.waits.length > 0 ? (
               <span className="waits">
                 대기:{" "}
-                {view.waits
-                  .map((kind) => <Tile key={kind} tile={kind * 4} size="xs" />)
-                  .map((node, index) => (
-                    <span key={index}>{node}</span>
-                  ))}
+                {view.waits.map((kind) => (
+                  <Tile key={kind} tile={kind * 4 + 1} size="xs" />
+                ))}
               </span>
             ) : null}
           </div>
