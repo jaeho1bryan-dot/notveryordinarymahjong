@@ -20,7 +20,7 @@
     "dev:client": "npm run dev -w @mahjong/client",
     "start": "npm run start -w @mahjong/server",
     "test": "npm run test -w @mahjong/shared",
-    "typecheck": "npm run typecheck -w @mahjong/shared && npm run typecheck -w @mahjong/server && npm run typecheck -w @mahjong/client"
+    "typecheck": "npm run build:shared && npm run typecheck -w @mahjong/server && npm run typecheck -w @mahjong/client"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

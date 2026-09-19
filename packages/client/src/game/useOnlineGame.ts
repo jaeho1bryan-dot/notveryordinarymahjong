@@ -1,4 +1,4 @@
-import { Client, type Room } from "colyseus.js";
+import { Client, type Room, type SeatReservation } from "colyseus.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -13,11 +13,54 @@ import {
 
 import { eventText, type Controller } from "./useSoloGame";
 
+const DEV_SERVER_PORT = 2567;
+
 const httpEndpoint = (): string => {
   const override = import.meta.env.VITE_SERVER_URL;
   if (typeof override === "string" && override.length > 0) return override.replace(/\/$/, "");
+  // `npm run dev` serves the client from Vite while the game server runs on
+  // its own port, and the Colyseus room socket lives on a dynamic
+  // `/{processId}/{roomId}` path that cannot be proxied by prefix.
+  if (import.meta.env.DEV) {
+    return `${window.location.protocol}//${window.location.hostname}:${DEV_SERVER_PORT}`;
+  }
   return window.location.origin;
 };
+
+/** Shape the matchmaker replies with (flat in 0.18, nested in older builds). */
+interface MatchmakePayload {
+  error?: string;
+  room?: ReservedRoom;
+  name?: string;
+  roomId?: string;
+  processId?: string;
+  publicAddress?: string;
+  sessionId?: string;
+  reconnectionToken?: string;
+  protocol?: string;
+  devMode?: boolean;
+}
+
+/**
+ * What `consumeSeatReservation` actually reads. The published typings model
+ * `room` as `RoomAvailable` (with `clients`/`maxClients`), which the
+ * matchmaker never sends, so the reservation is described separately and
+ * narrowed once at the call site.
+ */
+interface ReservedRoom {
+  name?: string;
+  roomId?: string;
+  processId?: string;
+  publicAddress?: string;
+}
+
+interface Reservation {
+  room: ReservedRoom;
+  sessionId: string;
+  reconnectionToken?: string;
+  protocol?: string;
+  devMode?: boolean;
+}
 
 /**
  * The 0.18 server answers matchmaking with a flat payload while the published
@@ -32,24 +75,23 @@ async function joinRoom(name: string, solo: boolean): Promise<Room> {
     body: JSON.stringify({ name, solo }),
   });
   if (!response.ok) throw new Error(`매칭 실패 (${response.status})`);
-  const payload = (await response.json()) as Record<string, any>;
+  const payload = (await response.json()) as MatchmakePayload;
   if (payload.error) throw new Error(String(payload.error));
-  const reservation = payload.room
-    ? payload
-    : {
-        room: {
-          name: payload.name,
-          roomId: payload.roomId,
-          processId: payload.processId,
-          publicAddress: payload.publicAddress,
-        },
-        sessionId: payload.sessionId,
-        reconnectionToken: payload.reconnectionToken,
-        protocol: payload.protocol,
-        devMode: payload.devMode,
-      };
+  if (!payload.sessionId) throw new Error("매칭 응답에 세션 정보가 없습니다.");
+  const reservation: Reservation = {
+    room: payload.room ?? {
+      name: payload.name,
+      roomId: payload.roomId,
+      processId: payload.processId,
+      publicAddress: payload.publicAddress,
+    },
+    sessionId: payload.sessionId,
+    reconnectionToken: payload.reconnectionToken,
+    protocol: payload.protocol,
+    devMode: payload.devMode,
+  };
   const client = new Client(endpoint.replace(/^http/, "ws"));
-  return client.consumeSeatReservation(reservation) as Promise<Room>;
+  return client.consumeSeatReservation(reservation as unknown as SeatReservation);
 }
 
 export function useOnlineGame(active: boolean, playerName: string, solo: boolean): Controller {

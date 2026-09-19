@@ -17,10 +17,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      "/matchmake": { target: "http://localhost:2567", changeOrigin: true },
-      "/room": { target: "ws://localhost:2567", ws: true },
-    },
   },
   build: {
     outDir: "dist",
