@@ -13,9 +13,17 @@ import {
 
 import { eventText, type Controller } from "./useSoloGame";
 
+const DEV_SERVER_PORT = 2567;
+
 const httpEndpoint = (): string => {
   const override = import.meta.env.VITE_SERVER_URL;
   if (typeof override === "string" && override.length > 0) return override.replace(/\/$/, "");
+  // `npm run dev` serves the client from Vite while the game server runs on
+  // its own port, and the Colyseus room socket lives on a dynamic
+  // `/{processId}/{roomId}` path that cannot be proxied by prefix.
+  if (import.meta.env.DEV) {
+    return `${window.location.protocol}//${window.location.hostname}:${DEV_SERVER_PORT}`;
+  }
   return window.location.origin;
 };
 

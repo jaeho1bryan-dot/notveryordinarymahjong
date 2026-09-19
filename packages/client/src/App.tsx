@@ -77,7 +77,9 @@ function SeatPanel({
         <span className="seat-wind">{WIND_KO[player.wind]}</span>
         <span className="seat-name">{player.name}</span>
         {player.isBot ? <span className="seat-tag">CPU</span> : null}
-        {!player.connected ? <span className="seat-tag warn">접속 끊김</span> : null}
+        {!player.connected && !player.isBot ? (
+          <span className="seat-tag warn">접속 끊김</span>
+        ) : null}
         <span className="seat-score">{player.score.toLocaleString()}</span>
         {player.riichi.declared ? <span className="seat-riichi">리치</span> : null}
       </div>
