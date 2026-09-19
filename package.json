@@ -1,0 +1,29 @@
+{
+  "name": "notveryordinarymahjong",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Web based Japanese riichi mahjong game (shared rules engine + Colyseus server + React 3D-ish client)",
+  "license": "MIT",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/client"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build -w @mahjong/shared && npm run build -w @mahjong/server && npm run build -w @mahjong/client",
+    "build:shared": "npm run build -w @mahjong/shared",
+    "dev": "npm run build:shared && concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev -w @mahjong/server",
+    "dev:client": "npm run dev -w @mahjong/client",
+    "start": "npm run start -w @mahjong/server",
+    "test": "npm run test -w @mahjong/shared",
+    "typecheck": "npm run typecheck -w @mahjong/shared && npm run typecheck -w @mahjong/server && npm run typecheck -w @mahjong/client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}
