@@ -1145,14 +1145,19 @@ export class MahjongGame {
       ordered[0].score += this.riichiSticks * 1000;
       this.riichiSticks = 0;
     }
+    const oka = ((this.rules.returnPoints - this.rules.startingPoints) * 4) / 1000;
     const standings: FinalStanding[] = ordered.map((player, index) => ({
       seat: player.seat,
       name: player.name,
       rank: index + 1,
       score: player.score,
       points:
-        Math.round(((player.score - this.rules.returnPoints) / 1000 + this.rules.uma[index]) * 10) /
-        10,
+        Math.round(
+          ((player.score - this.rules.returnPoints) / 1000 +
+            this.rules.uma[index] +
+            (index === 0 ? oka : 0)) *
+            10,
+        ) / 10,
     }));
     return { standings, reason };
   }
